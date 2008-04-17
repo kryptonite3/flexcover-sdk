@@ -118,21 +118,37 @@ public class ApplicationCompilerConfiguration extends ToolsConfiguration
 	}
 
     //
-	// 'generate-link-report' option
-	//
-	
-	private boolean generateLinkReport;
-	
-	public boolean generateLinkReport()
-	{
-		return generateLinkReport;
-	}
-	
-	public void keepLinkReport(boolean b)
-	{
-		generateLinkReport = b;
-	}
-	
+    // 'generate-link-report' option
+    //
+    
+    private boolean generateLinkReport;
+    
+    public boolean generateLinkReport()
+    {
+        return generateLinkReport;
+    }
+    
+    public void keepLinkReport(boolean b)
+    {
+        generateLinkReport = b;
+    }
+    
+    //
+    // 'generate-coverage-report' option
+    //
+    
+    private boolean generateCoverageMetadata;
+    
+    public boolean generateCoverageMetadata()
+    {
+        return generateCoverageMetadata;
+    }
+    
+    public void keepCoverageMetadata(boolean b)
+    {
+        generateCoverageMetadata = b;
+    }
+    
 	//
 	// 'load-config' option
 	//

@@ -113,7 +113,8 @@ class InterfaceCompiler implements flex2.compiler.Compiler
 		mimeTypes = new String[]{MimeMappings.MXML};
 		asc = new flex2.compiler.as3.Compiler(new flex2.compiler.as3.Configuration()
 		{
-			public boolean debug() { return false; }
+            public boolean coverage() { return false; }
+            public boolean debug() { return false; }
             public boolean profile() { return false; }
 			public boolean strict() { return ascConfiguration.strict(); }
 			public int dialect() { return ascConfiguration.dialect(); }

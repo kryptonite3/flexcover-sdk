@@ -22,6 +22,8 @@ public interface Configuration
 	 * Generate SWFs for debugging
 	 */
 	boolean debug();
+	
+	boolean coverage();
 
 	int dialect();
 	boolean adjustOpDebugLine();

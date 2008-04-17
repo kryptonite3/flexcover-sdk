@@ -52,6 +52,7 @@ public class FlexMovie extends SimpleMovie
 	    includes = new HashSet(configuration.getIncludes());
         unresolved = new HashSet(configuration.getUnresolved());
         generateLinkReport = configuration.generateLinkReport();
+        generateCoverageMetadata = configuration.generateCoverageMetadata();
         generateRBList = configuration.generateRBList();
 	    resourceBundles = new TreeSet(configuration.getResourceBundles());
 
@@ -240,6 +241,10 @@ public class FlexMovie extends SimpleMovie
             if (generateLinkReport)
             {
             	linkReport = DependencyWalker.dump( state );
+            }
+            if (generateCoverageMetadata)
+            {
+                coverageReport = CoverageMetadataWriter.dump( units );
             }
             if (generateRBList)
             {

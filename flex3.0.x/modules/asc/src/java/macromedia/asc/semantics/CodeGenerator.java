@@ -60,6 +60,8 @@ public final class CodeGenerator extends Emitter implements Evaluator, ErrorCons
     }
     private StackFrame frame = null;
     private ObjectList<StackFrame> frames = new ObjectList<StackFrame>();
+    
+    private ObjectList<String> coverageScopes = new ObjectList<String>();
 
     class ExceptionState
     {
@@ -3535,10 +3537,23 @@ public final class CodeGenerator extends Emitter implements Evaluator, ErrorCons
             fexpr.evaluate(cx, this);
         }
 */
+        String coverageName = null;
+        if (!(currentClass instanceof InterfaceDefinitionNode))
+        {
+            coverageName = node.debug_name;
+            if (coverageName == null || coverageName.length() == 0)
+            {
+                coverageName = coverageScopes.last() + "_" + node.internal_name;
+            }
+        }
+        
+        coverageScopes.push_back(coverageName);
         for (FunctionCommonNode def : node.fexprs)
         {
             def.evaluate(cx, this);
         }
+        coverageScopes.pop_back();
+        
         // reset debug position.  nested Function evaulation above will have updated it, we need to reset to top of this function.
         setPosition(cx.input.getLnNum(node.pos()),cx.input.getColPos(node.pos()),node.pos());
 
@@ -3562,7 +3577,7 @@ public final class CodeGenerator extends Emitter implements Evaluator, ErrorCons
         frame.activationIsExposed = needs_activation;
         frame.registerScopeIndex = needs_activation ? -1 : (cx.getScopes().size()-1);
 
-        StartMethod(frame.functionName,frame.maxParams,frame.maxLocals,0,needs_activation,node.needsArguments);
+        StartMethod(frame.functionName,frame.maxParams,frame.maxLocals,0,needs_activation,node.needsArguments,coverageName);
 
         // If this is a constructor, then insert a call to the base constructor,
         // and the instance initializer
@@ -3809,12 +3824,14 @@ public final class CodeGenerator extends Emitter implements Evaluator, ErrorCons
 
         StartProgram(getProgramName(cx));
 
+        coverageScopes.push_back("");
         for (int i = (node.fexprs == null) ? -1 : node.fexprs.size() - 1; i >= 0; i--)
         {
             Node fexpr = node.fexprs.get(i);
             fexpr.evaluate(cx, this);
         }
-
+        coverageScopes.pop_back();
+        
         for (ClassDefinitionNode def : node.clsdefs)
         {
             def.evaluate(cx, this);
@@ -4257,10 +4274,12 @@ public final class CodeGenerator extends Emitter implements Evaluator, ErrorCons
 			FinishMethod(cx,frame.functionName,type,types,null/*node->cframe*/,0,cx.getScopes().size(),"",false,false, null);
 
             {
+                coverageScopes.push_back(frame.functionName);
                 for (FunctionCommonNode expr : node.staticfexprs)
                 {
                     expr.evaluate(cx, this);
                 }
+                coverageScopes.pop_back();
             }
 
             popStackFrame();
@@ -4320,10 +4339,12 @@ public final class CodeGenerator extends Emitter implements Evaluator, ErrorCons
          * User defined methods
          */
 
+        coverageScopes.push_back(node.cframe.builder.classname + "/" + node.cframe.builder.classname + "$iinit");
         for (ListIterator<FunctionCommonNode> it = node.fexprs.listIterator(); it.hasNext(); )
         {
             it.next().evaluate(cx,this);
         }
+        coverageScopes.pop_back();
 
         boolean is_dynamic = node.attrs != null ? node.attrs.hasDynamic : false;
         boolean is_final = node.attrs != null ? node.attrs.hasFinal : false;
