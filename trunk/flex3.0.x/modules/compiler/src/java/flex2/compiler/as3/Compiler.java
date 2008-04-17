@@ -673,6 +673,7 @@ public class Compiler implements flex2.compiler.Compiler
 		LineNumberMap map = (LineNumberMap) context.getAttribute("LineNumberMap");
 		Emitter emitter = new BytecodeEmitter(cx, unit.getSource(),
 		                                      configuration != null && configuration.debug(),
+		                                      configuration != null && configuration.coverage(),
 		                                      (configuration != null && configuration.adjustOpDebugLine()) ? map : null);
 
 		cx.pushScope(node.frame);
@@ -700,6 +701,12 @@ public class Compiler implements flex2.compiler.Compiler
 				return;
 			}
 		}
+
+		// Plug the generated coverage keys into the top-level CompilationUnit that caused this one to be
+		// generated.
+		CompilationUnit originalUnit = unit.getSource().getCanonicalSource().getCompilationUnit();
+        originalUnit.coverageKeys = cx.getCoverageKeys();
+        cx.clearCoverageKeys();
 
 		cleanSlots((ObjectValue) unit.typeInfo, cx, unit.topLevelDefinitions);
 		unit.getContext().removeAttribute("cx");

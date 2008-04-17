@@ -52,6 +52,7 @@ public class ContextStatics
 	public CompilerHandler handler = null;
 	String pathspec;
 	String scriptname;
+	Set<String> coverageKeys = new LinkedHashSet<String>();
 
 	public static final int LANG_EN		= 0;
 	public static final int LANG_DE		= 1;
@@ -305,5 +306,10 @@ public class ContextStatics
     	protected_namespaces.remove(name);
     	static_protected_namespaces.remove(name);
     	namespaces.remove(name);
+    }
+    
+    public void addCoverageKey(String key)
+    {
+        coverageKeys.add(key);
     }
 }

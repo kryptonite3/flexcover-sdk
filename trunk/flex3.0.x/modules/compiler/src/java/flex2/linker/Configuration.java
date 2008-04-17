@@ -123,6 +123,12 @@ public interface Configuration
     String getLinkReportFileName();
     boolean generateLinkReport();
 
+    /**
+     * @return name of coverage report file, null if none
+     */
+    String getCoverageMetadataFileName();
+    boolean generateCoverageMetadata();
+
 	/**
 	 * @return name of resource bundle list file, null if none
 	 */

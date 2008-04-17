@@ -468,7 +468,7 @@ B4[label="B4"]
 	}
 
 
-	public void StartMethod(String name, int param_count, int local_count, int temp_count, boolean needs_activation, int needs_arguments)
+	public void StartMethod(String name, int param_count, int local_count, int temp_count, boolean needs_activation, int needs_arguments, String debug_name)
 	{
 		if (show_instructions)
 		{

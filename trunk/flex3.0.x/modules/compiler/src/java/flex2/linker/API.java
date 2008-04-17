@@ -75,6 +75,18 @@ public final class API
 		        ThreadLocalToolkit.log( new LinkerException.UnableToWriteLinkReport( fileName ) );
 	    	}
 	    }
+        if (configuration.generateCoverageMetadata() && configuration.getCoverageMetadataFileName() != null)
+        {
+            String fileName = configuration.getCoverageMetadataFileName();
+            try
+            {
+                FileUtil.writeFile(fileName, movie.getCoverageMetadata());
+            }
+            catch (Exception ex)
+            {
+                ThreadLocalToolkit.log( new LinkerException.UnableToWriteLinkReport( fileName ) );
+            }
+        }
 	    if (configuration.generateRBList() && configuration.getRBListFileName() != null)
 	    {
 	    	String fileName = configuration.getRBListFileName();

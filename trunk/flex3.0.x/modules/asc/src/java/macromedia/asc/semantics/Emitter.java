@@ -146,20 +146,24 @@ public class Emitter
 
 	protected void StartMethod()
 	{
-		StartMethod("", 0, 0, 0, false, 0);
+		StartMethod("", 0, 0, 0, false, 0, null);
 	}
 
 	protected void StartMethod(final String name, int param_count, int local_count)
 	{
-		StartMethod(name, param_count, local_count, 0, false, 0);
+		StartMethod(name, param_count, local_count, 0, false, 0, null);
 	}
 
-	protected void StartMethod(final String name, int param_count, int local_count, int temp_count, boolean needs_activation, int needs_arguments)
+    protected void StartMethod(final String name, int param_count, int local_count, int temp_count, boolean needs_activation, int needs_arguments)
+    {
+        StartMethod(name, param_count, local_count, 0, false, 0, null);
+    }
+	protected void StartMethod(final String name, int param_count, int local_count, int temp_count, boolean needs_activation, int needs_arguments, final String debug_name)
 	{
 		doing_method = true;
 		if (impl != null)
 		{
-			impl.StartMethod(name, param_count, local_count, temp_count, needs_activation, needs_arguments);
+			impl.StartMethod(name, param_count, local_count, temp_count, needs_activation, needs_arguments, debug_name);
 		}
 	}
 

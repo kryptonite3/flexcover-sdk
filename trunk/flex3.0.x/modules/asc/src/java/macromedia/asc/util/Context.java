@@ -1525,5 +1525,12 @@ public final class Context implements ErrorConstants
         }
         return code;
     }
+
+    public Set getCoverageKeys() {
+        return statics.coverageKeys;
+    }
     
+    public void clearCoverageKeys() {
+        statics.coverageKeys = new LinkedHashSet<String>();
+    }
 }

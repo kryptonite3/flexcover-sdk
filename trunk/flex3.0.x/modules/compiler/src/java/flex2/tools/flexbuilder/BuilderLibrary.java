@@ -123,10 +123,18 @@ public class BuilderLibrary extends Library
 							{
 							}
 						}
-						else if ("link-report".equals(var))
-						{
-							config.keepLinkReport(true);
-						}
+                        else if ("link-report".equals(var))
+                        {
+                            config.keepLinkReport(true);
+                        }
+                        else if ("coverage-report".equals(var))
+                        {
+                            config.keepCoverageMetadata(true);
+                        }
+                        else if ("compiler.coverage".equals(var))
+                        {
+                            config.enableCoverage(true);
+                        }
 						else if ("compiler.debug".equals(var))
 						{
 							try
@@ -370,7 +378,8 @@ public class BuilderLibrary extends Library
 		excludes.add("include-sources");
 		excludes.add("output");
 		excludes.add("version");
-		excludes.add("compiler.debug");
+        excludes.add("compiler.coverage");
+        excludes.add("compiler.debug");
 		excludes.add("compiler.profile");
 		excludes.add("compiler.accessible");
 		excludes.add("compiler.strict");

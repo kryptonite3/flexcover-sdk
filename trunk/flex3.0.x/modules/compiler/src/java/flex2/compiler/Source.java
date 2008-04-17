@@ -610,6 +610,18 @@ public final class Source
 			return null;
 		}
 	}
+	
+	public Source getCanonicalSource()
+	{
+	    if (delegate != null)
+	    {
+	        return delegate.getCanonicalSource();
+	    }
+	    else
+	    {
+	        return this;
+	    }
+	}
 
 	void clearSourceFragments()
 	{
