@@ -24,7 +24,9 @@ package
  */
 internal class UtilitiesClasses
 {
+        import coverage; coverage(null);
 	import com.adobe.viewsource.ViewSource; ViewSource;
+
 	// Maintain alphabetical order
 }
 
