@@ -2647,7 +2647,7 @@ public final class CodeGenerator extends Emitter implements Evaluator, ErrorCons
                     else
                     {
                         PushBoolean(false);
-                        If(IF_false);
+                        If(IF_false, true);
                         default_index = case_index;
                     }
                     PushCaseIndex(case_index);
@@ -2746,7 +2746,7 @@ public final class CodeGenerator extends Emitter implements Evaluator, ErrorCons
         if( expr == null )
         {
             PushBoolean(true);
-            LoopEnd(IF_true);
+            LoopEnd(IF_true, true);
         }
         else
         {
@@ -3538,7 +3538,8 @@ public final class CodeGenerator extends Emitter implements Evaluator, ErrorCons
         }
 */
         String coverageName = null;
-        if (!(currentClass instanceof InterfaceDefinitionNode))
+        if (!((currentClass instanceof InterfaceDefinitionNode)
+               || (node.def != null && node.def.skip())))
         {
             coverageName = node.debug_name;
             if (coverageName == null || coverageName.length() == 0)

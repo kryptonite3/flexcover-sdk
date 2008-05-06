@@ -23,6 +23,7 @@ public class DebugInfo
     String debug_file;
     boolean suppress_debug_method = false;
     boolean debug_file_dirty = false;
+    boolean debug_branch_file_dirty = false;
     String debug_function;
     boolean debug_function_dirty = false;
     
