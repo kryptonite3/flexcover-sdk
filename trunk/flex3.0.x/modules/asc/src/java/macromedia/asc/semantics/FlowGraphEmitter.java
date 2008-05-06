@@ -898,7 +898,7 @@ B4[label="B4"]
 	 *
 	 */
 
-	public void If(int kind)
+	public void If(int kind, boolean alwaysBranch)
 	{
 
 		if (show_linenums)
@@ -1146,7 +1146,7 @@ B4[label="B4"]
 	 *
 	 */
 
-	public void LoopEnd(int kind)
+	public void LoopEnd(int kind, boolean alwaysBranch)
 	{
 
 		if (show_linenums)

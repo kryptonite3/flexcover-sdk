@@ -570,11 +570,16 @@ public class Emitter
 		}
 	}
 
-    protected void If(int kind)
+	protected void If(int kind)
+	{
+	    If(kind, false);
+	}
+	
+    protected void If(int kind, boolean alwaysBranch)
     {
         if (impl != null)
         {
-            impl.If(kind);
+            impl.If(kind, alwaysBranch);
         }
     }
 
@@ -713,12 +718,17 @@ public class Emitter
 			impl.LoopBegin();
 		}
 	}
+    
+    protected void LoopEnd(int kind)
+    {
+        LoopEnd(kind, false);
+    }
 
-	protected void LoopEnd(int kind)
+	protected void LoopEnd(int kind, boolean alwaysBranch)
 	{
 		if (impl != null)
 		{
-			impl.LoopEnd(kind);
+			impl.LoopEnd(kind, alwaysBranch);
 		}
 	}
 

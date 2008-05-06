@@ -810,6 +810,7 @@ public class ActionBlockEmitter extends Emitter
 
         // Reset debug line number for new method
         debug_info.debug_file_dirty = true;
+        debug_info.debug_branch_file_dirty = true;
         debug_info.debug_linenum_dirty = true;
         debug_info.suppress_debug_method = (name.indexOf("$iinit") != -1 ||
                                             name.indexOf("$cinit") != -1);
@@ -3750,7 +3751,7 @@ public class ActionBlockEmitter extends Emitter
      *
      */
 
-    protected void If(int kind)
+    protected void If(int kind, boolean alwaysBranch)
     {
 
         showLineNumber();
@@ -3871,7 +3872,10 @@ public class ActionBlockEmitter extends Emitter
             code_out.write(" [" + cur_stack + "]");
         }
         
-        RecordIfCoverage();
+        if (!alwaysBranch)
+        {
+            RecordIfCoverage();
+        }
     }
 
     /*
@@ -4536,7 +4540,7 @@ public class ActionBlockEmitter extends Emitter
      *
      */
 
-    protected void LoopEnd(int kind)
+    protected void LoopEnd(int kind, boolean alwaysBranch)
     {
 
         showLineNumber();
@@ -4657,7 +4661,10 @@ public class ActionBlockEmitter extends Emitter
             code_out.write(" [" + cur_stack + "]");
         }
         
-        RecordLoopEndCoverage();
+        if (!alwaysBranch)
+        {
+            RecordLoopEndCoverage();
+        }
     }
 
     /*
@@ -7711,6 +7718,7 @@ protected void Setsuper(ByteList code,int index)
         {
             debug_info.debug_file = origin;
             debug_info.debug_file_dirty = true;
+            debug_info.debug_branch_file_dirty = true;
         }
     }
 
@@ -7756,11 +7764,32 @@ protected void Setsuper(ByteList code,int index)
                 debug_info.debug_linenum_dirty = false;
                 
                 // Spit out calls to a global coverage-monitoring function
-                RecordLineCoverage(debug_info.debug_function, debug_info.debug_linenum, debugFileName);
+                boolean lineRecorded = 
+                    RecordLineCoverage(debug_info.debug_function, debug_info.debug_linenum, debugFileName);
+
+                if (lineRecorded && debug_info.debug_function_dirty)
+                {
+                    // record a "branch" to indicate that this method was invoked at all
+                    if (recordBranch(true))
+                    {
+                        debug_info.debug_function_dirty = false;
+                    }
+                }
             }
         }
     }
     
+    protected boolean recordBranch(boolean isBranch)
+    {
+        String debugFileName = null;
+        if (debug_info.debug_branch_file_dirty)
+        {
+            debugFileName = debug_info.debug_file;
+            debug_info.debug_branch_file_dirty = false;
+        }
+        return RecordBranchCoverage(debug_info.debug_function, isBranch, lnNum, colPos, debugFileName);
+    }
+
     protected void RecordLoopBeginCoverage()
     {
         if (!branch_coverage)
@@ -7785,9 +7814,9 @@ protected void Setsuper(ByteList code,int index)
         Label(ab.code);
 
         // record the loop iteration entry point for the true arm of the iteration condition
-        RecordBranchCoverage(debug_info.debug_function, true, lnNum, colPos, debug_info.debug_file);
+        recordBranch(true);
     }
-
+        
     protected void RecordLoopEndCoverage()
     {
         if (!branch_coverage)
@@ -7804,7 +7833,7 @@ protected void Setsuper(ByteList code,int index)
 
         // This one is easy: just record the false arm of the iteration condition as we are
         // exiting the loop.
-        RecordBranchCoverage(debug_info.debug_function, false, lnNum, colPos, debug_info.debug_file);
+        recordBranch(false);
     }
 
     protected void RecordIfCoverage()
@@ -7824,7 +7853,7 @@ protected void Setsuper(ByteList code,int index)
 
         // record the true arm of the branch and insert a jump over the recording of the false arm
         // that we'll patch later.
-        RecordBranchCoverage(debug_info.debug_function, true, lnNum, colPos, debug_info.debug_file);
+        recordBranch(true);
         Jump(ab.code);
         int true_addr = getIP() - 3;
 
@@ -7838,7 +7867,7 @@ protected void Setsuper(ByteList code,int index)
 
         // record the false arm of the branch, and create a jump that will be patched by a subsequent target
         // in place of the original conditional jump.
-        RecordBranchCoverage(debug_info.debug_function, false, lnNum, colPos, debug_info.debug_file);
+        recordBranch(false);
         Jump(ab.code);
         if_addrs.add(getIP() - 3);
         
@@ -7849,12 +7878,14 @@ protected void Setsuper(ByteList code,int index)
         ab.code.set(true_addr + 2, (byte) (offset >> 16));
     }
     
-    public void RecordLineCoverage(String functionName, int linenum, String debugFileName)
+    public boolean RecordLineCoverage(String functionName, int linenum, String debugFileName)
     {
+        return false;
     }
 
-    public void RecordBranchCoverage(String functionName, boolean isBranch, int linenum, int colnum, String debugFileName)
+    public boolean RecordBranchCoverage(String functionName, boolean isBranch, int linenum, int colnum, String debugFileName)
     {
+        return false;
     }
 
     public void reorderMainScript()
@@ -7951,7 +7982,7 @@ protected void Setsuper(ByteList code,int index)
     public boolean coverage;
 
     // hack to temporarily prevent branch coverage
-    private boolean branch_coverage = false;
+    private boolean branch_coverage = true;
 
     private DebugInfo debug_info = new DebugInfo();
 

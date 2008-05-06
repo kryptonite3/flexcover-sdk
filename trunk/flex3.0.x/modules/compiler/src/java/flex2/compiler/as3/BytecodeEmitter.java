@@ -159,42 +159,65 @@ public final class BytecodeEmitter extends ActionBlockEmitter
 		}
 	}
 	
-    public void RecordLineCoverage(String functionName, int linenum, String debugFileName)
+    public boolean RecordLineCoverage(String functionName, int linenum, String debugFileName)
     {
         if (functionName == null
             || functionName.length() == 0
             || (!source.isDebuggable())
             || (!coverage))
         {
-            return;
+            return false;
         }
 
         // Short circuit if the line is beyond the end of the file.
         if (linenum > cx.input.lnNum)
         {
-            return;
+            return false;
         }
 
         int newLine = calculateLineNumber(linenum);
-        if (newLine != -1)
+        if (newLine == -1)
         {
-            String coverageKey = functionName + "@" + newLine;
-            instrumentCoverage(coverageKey, debugFileName);
+            return false;
         }
+        
+        String coverageKey = functionName + "@" + newLine;
+        instrumentCoverage(coverageKey, debugFileName);
+        return true;
     }
 
-    public void RecordBranchCoverage(String functionName, boolean isBranch, int linenum, int colnum, String debugFileName)
+    public boolean RecordBranchCoverage(String functionName, boolean isBranch, int linenum, int colnum, String debugFileName)
     {
         if (functionName == null
             || functionName.length() == 0
             || (!source.isDebuggable())
             || (!coverage))
         {
-            return;
+            return false;
         }
 
+        // Short circuit if the line is beyond the end of the file.
+        if (linenum > cx.input.lnNum)
+        {
+            return false;
+        }
+
+        int newLine = calculateLineNumber(linenum);
+        if (newLine == -1)
+        {
+            return false;
+        }
+        
+        // Guard against recursive coverage recording calls from instrumentation bytecode output
+        boolean saved_emit_debug_info = emit_debug_info;
+        emit_debug_info = false;
+        
         String coverageKey = functionName + '@' + (isBranch ? '+' : '-') + linenum + '.' + colnum;
         instrumentCoverage(coverageKey, debugFileName);
+        
+        emit_debug_info = saved_emit_debug_info;
+        
+        return true;
     }
 
     private void instrumentCoverage(String coverageKey, String debugFileName)
