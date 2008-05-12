@@ -4524,8 +4524,6 @@ public class ActionBlockEmitter extends Emitter
         Jump(ab.code);
         loopbegin_addrs.add(getIP() - 3);
 
-        RecordLoopBeginCoverage();
-        
         Label(ab.code);
         
         last_in = IKIND_other;
@@ -4653,17 +4651,17 @@ public class ActionBlockEmitter extends Emitter
                 break;
         }
 
+        if (!alwaysBranch)
+        {
+            RecordLoopEndCoverage();
+        }
+
         loopbegin_addrs.removeLast();
         last_in = IKIND_other;
         
         if (show_instructions)
         {
             code_out.write(" [" + cur_stack + "]");
-        }
-        
-        if (!alwaysBranch)
-        {
-            RecordLoopEndCoverage();
         }
     }
 
@@ -7787,36 +7785,9 @@ protected void Setsuper(ByteList code,int index)
             debugFileName = debug_info.debug_file;
             debug_info.debug_branch_file_dirty = false;
         }
-        return RecordBranchCoverage(debug_info.debug_function, isBranch, lnNum, colPos, debugFileName);
+        return RecordBranchCoverage(debug_info.debug_function, isBranch, lnNum, colPos);
     }
 
-    protected void RecordLoopBeginCoverage()
-    {
-        if (!branch_coverage)
-        {
-            return;
-        }
-        
-        showLineNumber();
-        if (show_instructions)
-        {
-            code_out.println();
-            code_out.print("RecordLoopBeginCoverage");
-        }
-
-        // A prior jump will already have been created to go to the termination condition(while/for) 
-        // or to the code immediately following whatever gets emitted by this method (do...while).
-        // So all we have to do is stick in a Label for the termination condition to jump back to
-        // (since the IP pushed on the stack for LoopBegin is still valid) and record the outcome of
-        // the loop termination condition as true.  In effect, this recording of the branch coverage
-        // becomes the start of the loop body.
-        // 
-        Label(ab.code);
-
-        // record the loop iteration entry point for the true arm of the iteration condition
-        recordBranch(true);
-    }
-        
     protected void RecordLoopEndCoverage()
     {
         if (!branch_coverage)
@@ -7831,9 +7802,35 @@ protected void Setsuper(ByteList code,int index)
             code_out.print("RecordLoopEndCoverage");
         }
 
-        // This one is easy: just record the false arm of the iteration condition as we are
-        // exiting the loop.
+        // save the address of the just-emitted jump on the true condition that goes back to the loop start.
+        int true_addr = getIP() - 3;
+
+        // Record the false arm of the iteration condition as we are exiting the loop and stick in a jump
+        // over the recording of the true arm that we'll patch later.
         recordBranch(false);
+        Jump(ab.code);
+        int false_addr = getIP() - 3;
+
+        // now patch the previous conditional jump to go to the recording of the true arm
+        int offset = getIP() - true_addr + 1 - 4;
+        ab.code.set(true_addr, (byte) offset);
+        ab.code.set(true_addr + 1, (byte) (offset >> 8));
+        ab.code.set(true_addr + 2, (byte) (offset >> 16));
+
+        // record the true arm of the branch, and jump back to the start of the loop.
+        recordBranch(true);
+        Jump(ab.code);
+        int loop_addr = getIP() - 3;
+        offset = loopbegin_addrs.back() + 3 - getIP();
+        ab.code.set(loop_addr, (byte) offset);
+        ab.code.set(loop_addr + 1, (byte) (offset >> 8));
+        ab.code.set(loop_addr + 2, (byte) (offset >> 16));
+        
+        // Finally, patch the jump at the end of the recording of the false arm to come here.
+        offset = getIP() - false_addr + 1 - 4;
+        ab.code.set(false_addr, (byte) offset);
+        ab.code.set(false_addr + 1, (byte) (offset >> 8));
+        ab.code.set(false_addr + 2, (byte) (offset >> 16));
     }
 
     protected void RecordIfCoverage()
@@ -7883,7 +7880,7 @@ protected void Setsuper(ByteList code,int index)
         return false;
     }
 
-    public boolean RecordBranchCoverage(String functionName, boolean isBranch, int linenum, int colnum, String debugFileName)
+    public boolean RecordBranchCoverage(String functionName, boolean isBranch, int linenum, int colnum)
     {
         return false;
     }
