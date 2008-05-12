@@ -186,7 +186,7 @@ public final class BytecodeEmitter extends ActionBlockEmitter
         return true;
     }
 
-    public boolean RecordBranchCoverage(String functionName, boolean isBranch, int linenum, int colnum, String debugFileName)
+    public boolean RecordBranchCoverage(String functionName, boolean isBranch, int linenum, int colnum)
     {
         if (functionName == null
             || functionName.length() == 0
@@ -212,8 +212,17 @@ public final class BytecodeEmitter extends ActionBlockEmitter
         boolean saved_emit_debug_info = emit_debug_info;
         emit_debug_info = false;
         
-        String coverageKey = functionName + '@' + (isBranch ? '+' : '-') + linenum + '.' + colnum;
-        instrumentCoverage(coverageKey, debugFileName);
+        String branchLocation = linenum + "." + colnum;
+        if (map != null)
+        {
+            branchLocation = newLine + "#" + branchLocation;
+        }
+        
+        String coverageKey = functionName + '@'
+            + (isBranch ? '+' : '-') 
+            + branchLocation;
+
+        instrumentCoverage(coverageKey, null);
         
         emit_debug_info = saved_emit_debug_info;
         
