@@ -240,9 +240,6 @@ public final class Compiler extends Tool
                 List units = flex2.compiler.API.compile(fileSpec, sourceList, null, sourcePath, resources, bundlePath, swcContext,
                                                         configuration, compilers, new PreLink(), licenseMap, new ArrayList());
 
-                // link
-                Movie movie = flex2.linker.API.link(units, new PostLink(configuration), configuration);
-
                 // output SWF
                 String name = configuration.getOutput();
     	        if (name == null)
@@ -257,6 +254,16 @@ public final class Compiler extends Tool
     		        	name = name.substring(0, name.lastIndexOf('.')) + ".swf";		        	
     		        }
     	        }
+
+                // default coverage metadata output to sibling file of output
+                if (configuration.getCompilerConfiguration().coverage()
+                    && !configuration.generateCoverageMetadata())
+                {
+                    configuration.setCoverageMetadataFileName(name.substring(0, name.lastIndexOf('.')) + ".cvm");
+                }
+                
+                // link
+                Movie movie = flex2.linker.API.link(units, new PostLink(configuration), configuration);
 
                 File file = FileUtil.openFile(name, true);
                 OutputStream swfOut = new BufferedOutputStream(new FileOutputStream(file));

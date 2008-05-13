@@ -158,10 +158,19 @@ public class Compc extends Tool
             List units = flex2.compiler.API.compile(fileSpec, sourceList, classes.values(), sourcePath, resources, bundlePath, swcContext,
 	                                                   configuration, compilers, new CompcPreLink(rbFiles, configuration.getIncludeResourceBundles()), licenseMap, new ArrayList()); // List<CompilationUnit>
             swcContext.setLock(false);  // FIXME, allow swcs to be closed
-	        // export SWC
+
+            String swcStr = configuration.getOutput();
+
+            // default coverage metadata output to sibling file of output
+            if (configuration.getCompilerConfiguration().coverage()
+                && !configuration.generateCoverageMetadata())
+            {
+                configuration.setCoverageMetadataFileName(swcStr.substring(0, swcStr.lastIndexOf('.')) + ".cvm");
+            }
+            
+            // export SWC
             API.exportSwc( configuration, units, nsComponents, cache, rbFiles );
 //            swcContext.close(); // FIXME, there's a close in compile() that we're blocking
-            String swcStr = configuration.getOutput();
             if (swcStr != null && ThreadLocalToolkit.errorCount() == 0)
             {
 	            File file = FileUtil.openFile(swcStr);

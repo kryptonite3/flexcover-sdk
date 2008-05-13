@@ -399,6 +399,11 @@ public class Configuration implements flex2.linker.Configuration
         return coverageReportFileName != null;
     }
 
+    public void setCoverageMetadataFileName(String filename)
+    {
+        coverageReportFileName = filename;
+    }
+    
     public void cfgCoverageMetadata( ConfigurationValue cv, String filename )
     {
         this.coverageReportFileName = getOutputPath(cv, filename);
