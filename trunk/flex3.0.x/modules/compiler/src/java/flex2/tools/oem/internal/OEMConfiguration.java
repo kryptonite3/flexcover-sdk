@@ -83,6 +83,7 @@ public class OEMConfiguration implements Configuration, ConfigurationConstants
 		
 		keepLinkReport = false;
 		keepConfigurationReport = false;
+		keepCoverageMetadata = true;
 		
 		tokens = new TreeMap();
 	}

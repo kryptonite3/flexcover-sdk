@@ -116,6 +116,11 @@ public class LinkerConfiguration extends ToolsConfiguration
 		}
 	}
 
+    public String getCoverageMetadataFileName()
+    {
+        return null;
+    }
+    
 	public Set getExterns()
 	{
 		return super.getExterns();
@@ -324,6 +329,18 @@ public class LinkerConfiguration extends ToolsConfiguration
 		return generateLinkReport;
 	}
 	
+    private boolean generateCoverageMetadata;
+    
+    public void keepCoverageMetadata(boolean b)
+    {
+        generateCoverageMetadata = b;
+    }
+    
+    public boolean generateCoverageMetadata()
+    {
+        return generateCoverageMetadata;
+    }
+    
 	public String[] getMetadataToKeep()
 	{
 		if (args.contains(ConfigurationConstants.COMPILER_KEEP_AS3_METADATA))

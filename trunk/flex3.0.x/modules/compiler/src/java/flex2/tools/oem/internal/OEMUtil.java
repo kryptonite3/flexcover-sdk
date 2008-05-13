@@ -202,10 +202,18 @@ public class OEMUtil
 																	 Logger logger, PathResolver resolver,
 																	 MimeMappings mimeMappings)
 	{
-		return getApplicationConfiguration(args, keepLinkReport, logger, resolver, mimeMappings, true);
+		return getApplicationConfiguration(args, keepLinkReport, true, logger, resolver, mimeMappings, true);
 	}
 
-	/**
+    public static final OEMConfiguration getApplicationConfiguration(String[] args, boolean keepLinkReport,
+                                                                    Logger logger,
+                                                                    PathResolver resolver, MimeMappings mimeMappings,
+                                                                    boolean processDefaults)
+    {
+        return getApplicationConfiguration(args, keepLinkReport, true, logger, resolver, mimeMappings, processDefaults);
+    }
+
+        /**
 	 * 
 	 * @param args
 	 * @param logger
@@ -213,7 +221,8 @@ public class OEMUtil
 	 * @param processDefaults
 	 * @return
 	 */
-	public static final OEMConfiguration getApplicationConfiguration(String[] args, boolean keepLinkReport, Logger logger,
+	public static final OEMConfiguration getApplicationConfiguration(String[] args, boolean keepLinkReport,
+	                                                                 boolean keepCoverageMetadata, Logger logger,
 																	 PathResolver resolver, MimeMappings mimeMappings,
 																	 boolean processDefaults)
 	{
@@ -240,6 +249,7 @@ public class OEMUtil
             
             ApplicationCompilerConfiguration configuration = (ApplicationCompilerConfiguration) obj;
             configuration.keepLinkReport(keepLinkReport);
+            configuration.keepCoverageMetadata(keepCoverageMetadata);
             
             return new OEMConfiguration(cfgbuf, configuration);
 		}
@@ -275,9 +285,15 @@ public class OEMUtil
 																 Logger logger, PathResolver resolver,
 																 MimeMappings mimeMappings)
 	{
-		return getLibraryConfiguration(args, keepLinkReport, logger, resolver, mimeMappings, true);
+		return getLibraryConfiguration(args, keepLinkReport, true, logger, resolver, mimeMappings, true);
 	}
 
+    public static final OEMConfiguration getLibraryConfiguration(String[] args, boolean keepLinkReport, Logger logger,
+            PathResolver resolver, MimeMappings mimeMappings,
+            boolean processDefaults)
+    {
+        return getLibraryConfiguration(args, keepLinkReport, true, logger, resolver, mimeMappings, processDefaults);
+    }
 	/**
 	 * 
 	 * @param args
@@ -286,7 +302,8 @@ public class OEMUtil
 	 * @param processDefaults
 	 * @return
 	 */
-	public static final OEMConfiguration getLibraryConfiguration(String[] args, boolean keepLinkReport, Logger logger,
+	public static final OEMConfiguration getLibraryConfiguration(String[] args, boolean keepLinkReport,
+	                                                             boolean keepCoverageMetadata, Logger logger,
 																 PathResolver resolver, MimeMappings mimeMappings,
 																 boolean processDefaults)
 	{
@@ -312,6 +329,7 @@ public class OEMUtil
             
             LibraryCompilerConfiguration configuration = (LibraryCompilerConfiguration) obj;
             configuration.keepLinkReport(keepLinkReport);
+            configuration.keepCoverageMetadata(keepCoverageMetadata);
             
             return new OEMConfiguration(cfgbuf, configuration);
 		}
@@ -344,6 +362,7 @@ public class OEMUtil
 	 * @return
 	 */
 	public static final OEMConfiguration getLinkerConfiguration(String[] args, boolean keepLinkReport,
+	                                                            boolean keepCoverageMetadata,
 																Logger logger, MimeMappings mimeMappings,
 																PathResolver resolver,
 																flex2.compiler.common.Configuration c,
@@ -367,6 +386,7 @@ public class OEMUtil
             LinkerConfiguration configuration = (LinkerConfiguration) obj;
             configuration.setOriginalConfiguration(c, newLinkerOptions, includes, excludes);
             configuration.keepLinkReport(keepLinkReport);
+            configuration.keepCoverageMetadata(keepCoverageMetadata);
             
             return new OEMConfiguration(cfgbuf, configuration);
 		}

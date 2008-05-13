@@ -207,6 +207,15 @@ public interface Report
      * @see flex2.tools.oem.Configuration#keepLinkReport(boolean)
      */
     long writeLinkReport(Writer out) throws IOException;
+
+    /**
+     * Write the coverage metadata to the specified output.
+     * 
+     * @param out
+     * @return
+     * @throws IOException
+     */
+    long writeCoverageMetadata(Writer out) throws IOException;
     
     /**
      * Writes the configuration report to the specified output.
