@@ -251,7 +251,6 @@ public class Compiler implements flex2.compiler.Compiler
 
 			source.close();
 
-			cleanNodeFactory(cx.getNodeFactory());
 		}
 		else
 		{
@@ -282,8 +281,6 @@ public class Compiler implements flex2.compiler.Compiler
 					}
 				}
 				node = parser.parseProgram();
-
-				cleanNodeFactory(cx.getNodeFactory());
 			}
 			catch (IOException ex)
 			{
@@ -303,6 +300,24 @@ public class Compiler implements flex2.compiler.Compiler
 				}
 			}
 		}
+
+	    if (configuration.coverage())
+	    {
+	        NodeFactory nodeFactory = cx.getNodeFactory();
+	        IdentifierNode coverageId = nodeFactory.identifier("coverage");
+	        PackageIdentifiersNode coveragePkgId = nodeFactory.packageIdentifiers(null, coverageId, true);
+	        PackageNameNode coveragePkg = nodeFactory.packageName(coveragePkgId);
+	        ImportDirectiveNode coverageImport = nodeFactory.importDirective(null, coveragePkg, null, cx);
+	        node.statements.items.add(coverageImport);
+	        
+	        GetExpressionNode coverageGet = nodeFactory.getExpression(coverageId);
+	        MemberExpressionNode coverageMember = nodeFactory.memberExpression(null, coverageGet);
+	        ListNode coverageList = nodeFactory.list(null, coverageMember);
+	        ExpressionStatementNode coverageExpr = nodeFactory.expressionStatement(coverageList);
+	        node.statements.items.add(coverageExpr);
+	    }
+	    
+        cleanNodeFactory(cx.getNodeFactory());
 
 		if (ThreadLocalToolkit.errorCount() > 0)
 		{
