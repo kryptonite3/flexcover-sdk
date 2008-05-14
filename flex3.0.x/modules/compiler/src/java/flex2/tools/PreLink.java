@@ -1147,8 +1147,6 @@ public class PreLink implements flex2.compiler.PreLink
 		    "        }", lineSep,
 		    "    }", lineSep,
 		    codegenRslCompleteListener(configuration, lineSep),
-            configuration.getCompilerConfiguration().coverage()
-            ? "    private function coverageDependency():void { coverage(null); }" : "",
 		    "}", lineSep, lineSep,
 		    "}", lineSep,
 	    };
