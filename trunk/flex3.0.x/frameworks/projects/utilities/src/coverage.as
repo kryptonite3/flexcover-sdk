@@ -4,6 +4,6 @@ package
     
     public function coverage(key:String):void
     {
-        CoverageManager.recordCoverage(key);
+        CoverageManager.agent.recordCoverage(key);
     }
 }
