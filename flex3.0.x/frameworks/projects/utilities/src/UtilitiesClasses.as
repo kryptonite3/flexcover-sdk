@@ -25,6 +25,8 @@ package
 internal class UtilitiesClasses
 {
         import coverage; coverage(null);
+        import com.allurent.coverage.runtime.CoverageManager; CoverageManager;
+        import com.allurent.coverage.runtime.TraceCoverageAgent; TraceCoverageAgent;
 	import com.adobe.viewsource.ViewSource; ViewSource;
 
 	// Maintain alphabetical order
