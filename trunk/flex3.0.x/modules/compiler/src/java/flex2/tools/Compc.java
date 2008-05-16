@@ -165,7 +165,9 @@ public class Compc extends Tool
             if (configuration.getCompilerConfiguration().coverage()
                 && !configuration.generateCoverageMetadata())
             {
-                configuration.setCoverageMetadataFileName(swcStr.substring(0, swcStr.lastIndexOf('.')) + ".cvm");
+                int dotIndex = swcStr.lastIndexOf('.');
+                String cvmName = (dotIndex >= 0) ? swcStr.substring(0, dotIndex) : swcStr;
+                configuration.setCoverageMetadataFileName(cvmName + ".cvm");
             }
             
             // export SWC
