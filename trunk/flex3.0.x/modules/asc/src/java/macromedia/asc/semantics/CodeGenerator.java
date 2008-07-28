@@ -3537,6 +3537,13 @@ public final class CodeGenerator extends Emitter implements Evaluator, ErrorCons
             fexpr.evaluate(cx, this);
         }
 */
+        
+        // FLEXCOVER: determine the name with which this function node will be instrumented.
+        //   Force the coverage name to null (inhibiting instrumentation) if this is within an interface or
+        //   if it is marked with the skip flag, which is true for synthetic functions.  If the node was not
+        //   assigned an explicit debug name by the compiler (which closures are not) then make up a name for
+        //   coverage purposes using the node's internal name appended to the current coverage scope name.
+        //
         String coverageName = null;
         if (!((currentClass instanceof InterfaceDefinitionNode)
                || (node.def != null && node.def.skip())))
@@ -3548,6 +3555,9 @@ public final class CodeGenerator extends Emitter implements Evaluator, ErrorCons
             }
         }
         
+        // FLEXCOVER: Maintain a current "coverage scope" that can be used to determine names for recursively
+        // generated closures (see above).
+        //
         coverageScopes.push_back(coverageName);
         for (FunctionCommonNode def : node.fexprs)
         {
@@ -3578,6 +3588,7 @@ public final class CodeGenerator extends Emitter implements Evaluator, ErrorCons
         frame.activationIsExposed = needs_activation;
         frame.registerScopeIndex = needs_activation ? -1 : (cx.getScopes().size()-1);
 
+        // FLEXCOVER: pass coverage name to StartMethod
         StartMethod(frame.functionName,frame.maxParams,frame.maxLocals,0,needs_activation,node.needsArguments,coverageName);
 
         // If this is a constructor, then insert a call to the base constructor,
@@ -3825,6 +3836,7 @@ public final class CodeGenerator extends Emitter implements Evaluator, ErrorCons
 
         StartProgram(getProgramName(cx));
 
+        // FLEXCOVER: the coverage scope is blank for functions defined at the ProgramNode level, outside of a class.
         coverageScopes.push_back("");
         for (int i = (node.fexprs == null) ? -1 : node.fexprs.size() - 1; i >= 0; i--)
         {
@@ -4275,6 +4287,7 @@ public final class CodeGenerator extends Emitter implements Evaluator, ErrorCons
 			FinishMethod(cx,frame.functionName,type,types,null/*node->cframe*/,0,cx.getScopes().size(),"",false,false, null);
 
             {
+            	// FLEXCOVER: establish coverage scope with the class initializer name
                 coverageScopes.push_back(frame.functionName);
                 for (FunctionCommonNode expr : node.staticfexprs)
                 {
@@ -4340,6 +4353,7 @@ public final class CodeGenerator extends Emitter implements Evaluator, ErrorCons
          * User defined methods
          */
 
+        // FLEXCOVER: establish coverage scope based on initializer
         coverageScopes.push_back(node.cframe.builder.classname + "/" + node.cframe.builder.classname + "$iinit");
         for (ListIterator<FunctionCommonNode> it = node.fexprs.listIterator(); it.hasNext(); )
         {
