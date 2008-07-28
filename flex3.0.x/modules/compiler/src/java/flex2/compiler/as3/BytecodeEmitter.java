@@ -159,6 +159,9 @@ public final class BytecodeEmitter extends ActionBlockEmitter
 		}
 	}
 	
+    /* (non-Javadoc)
+     * @see macromedia.asc.embedding.avmplus.ActionBlockEmitter#RecordLineCoverage(java.lang.String, int, java.lang.String)
+     */
     public boolean RecordLineCoverage(String functionName, int linenum, String debugFileName)
     {
         if (functionName == null
@@ -186,6 +189,9 @@ public final class BytecodeEmitter extends ActionBlockEmitter
         return true;
     }
 
+    /* (non-Javadoc)
+     * @see macromedia.asc.embedding.avmplus.ActionBlockEmitter#RecordBranchCoverage(java.lang.String, boolean, int, int)
+     */
     public boolean RecordBranchCoverage(String functionName, boolean isBranch, int linenum, int colnum)
     {
         if (functionName == null
@@ -215,6 +221,10 @@ public final class BytecodeEmitter extends ActionBlockEmitter
         String branchLocation = linenum + "." + colnum;
         if (map != null)
         {
+        	// If there is a map, then this indicates that actually we're in an MXML source file,
+        	// and the line number and column might be meaningless, so emit the MXML line number
+        	// followed by a "#" and the AS3 source's line and column.
+        	//
             branchLocation = newLine + "#" + branchLocation;
         }
         
@@ -229,15 +239,36 @@ public final class BytecodeEmitter extends ActionBlockEmitter
         return true;
     }
 
+    /**
+     * Emit an instrumentation call to the top-level coverage() function containing the coverage key and,
+     * optionally, the source file name.
+     * 
+     * @param coverageKey a coverage key describing some executable coverage element in the program
+     * @param debugFileName an optional name to be recorded along with the key as part of the coverage metadata,
+     * as an aid to finding the source later.  This name is not passed in the coverage() call.
+     */
     private void instrumentCoverage(String coverageKey, String debugFileName)
     {
         final String COVERAGE = "coverage";
         ObjectValue n = cx.publicNamespace();
         Namespaces ns = cx.statics.internNamespaces.intern(n);
+        
+        boolean scopeStackEmpty = (cur_scope == 0); 
+        if (scopeStackEmpty)
+        {
+	        LoadThis();
+	        PushScope();   // Need to push scope to keep verifier happy if scope stack is empty
+        }
+        
         FindProperty(COVERAGE, ns, true, true, false);
         PushString(coverageKey);
         CallProperty(COVERAGE, ns, 1, true, false, false, false);
         Pop();
+        
+        if (scopeStackEmpty)
+        {
+        	PopScope();    // Pop the extra scope
+        }
         
         if (debugFileName != null)
         {
