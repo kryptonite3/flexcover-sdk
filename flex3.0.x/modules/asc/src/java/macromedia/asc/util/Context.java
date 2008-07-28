@@ -1526,10 +1526,12 @@ public final class Context implements ErrorConstants
         return code;
     }
 
+    // FLEXCOVER: get all accumulated coverage keys so far 
     public Set getCoverageKeys() {
         return statics.coverageKeys;
     }
     
+    // FLEXCOVER: clear all accumulated coverage keys
     public void clearCoverageKeys() {
         statics.coverageKeys = new LinkedHashSet<String>();
     }

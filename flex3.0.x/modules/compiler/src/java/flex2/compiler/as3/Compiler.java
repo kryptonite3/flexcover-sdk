@@ -301,6 +301,12 @@ public class Compiler implements flex2.compiler.Compiler
 			}
 		}
 
+		// FLEXCOVER: synthesize a reference to the coverage() function in each compilation unit, to force
+		//     it to be referenced and linked into the final program.  The following verbiage is basically equivalent
+		//     to:
+		//			import coverage;
+		//			coverage;
+		//
 	    if (configuration.coverage())
 	    {
 	        NodeFactory nodeFactory = cx.getNodeFactory();
@@ -317,6 +323,9 @@ public class Compiler implements flex2.compiler.Compiler
 	        node.statements.items.add(coverageExpr);
 	    }
 	    
+	    // FLEXCOVER: This was moved down here because the node factory needs to still be alive for the above
+	    //    synthetic-reference incantations to work.
+	    //
         cleanNodeFactory(cx.getNodeFactory());
 
 		if (ThreadLocalToolkit.errorCount() > 0)
@@ -717,8 +726,8 @@ public class Compiler implements flex2.compiler.Compiler
 			}
 		}
 
-		// Plug the generated coverage keys into the top-level CompilationUnit that caused this one to be
-		// generated.
+		// FLEXCOVER: Copy the generated coverage keys from the Context into the top-level CompilationUnit
+		// that caused this one to be generated.
 		CompilationUnit originalUnit = unit.getSource().getCanonicalSource().getCompilationUnit();
         originalUnit.coverageKeys = cx.getCoverageKeys();
         cx.clearCoverageKeys();
