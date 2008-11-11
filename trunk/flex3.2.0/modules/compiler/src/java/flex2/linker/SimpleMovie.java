@@ -149,8 +149,9 @@ public class SimpleMovie extends Movie
     protected String rootClassName;
     protected Map exportedUnits;
     
-    protected boolean generateLinkReport, generateRBList;
+    protected boolean generateLinkReport, generateCoverageMetadata, generateRBList;
     protected String linkReport;
+    protected String coverageReport;
 	protected String rbList;
 
     protected static String formatSymbolClassName( String className )
@@ -334,6 +335,11 @@ public class SimpleMovie extends Movie
     public String getLinkReport()
     {
     	return linkReport;
+    }
+    
+    public String getCoverageMetadata()
+    {
+        return coverageReport;
     }
     
     public String getRBList()

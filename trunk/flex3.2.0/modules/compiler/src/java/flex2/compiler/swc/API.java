@@ -211,6 +211,10 @@ public class API
             {
                 FileUtil.writeFile(configuration.getLinkReportFileName(), m.getLinkReport());
             }
+            if (configuration.generateCoverageMetadata() && configuration.getCoverageMetadataFileName() != null)
+            {
+                FileUtil.writeFile(configuration.getCoverageMetadataFileName(), m.getCoverageMetadata());
+            }
             if (configuration.generateRBList() && configuration.getRBListFileName() != null)
             {
                 FileUtil.writeFile(configuration.getRBListFileName(), m.getRBList());

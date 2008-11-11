@@ -96,6 +96,11 @@ public class BuilderConfiguration implements Configuration
 	{
 		configuration.checkActionScriptWarning(warningCode, b);
 	}
+	
+	public void enableCoverage(boolean b)
+	{
+	    configuration.enableCoverage(b);
+	}
 
 	public void enableAccessibility(boolean b)
 	{
@@ -142,10 +147,15 @@ public class BuilderConfiguration implements Configuration
 		configuration.keepCompilerGeneratedActionScript(b);
 	}
 
-	public void keepLinkReport(boolean b)
-	{
-		configuration.keepLinkReport(b);
-	}
+    public void keepLinkReport(boolean b)
+    {
+        configuration.keepLinkReport(b);
+    }
+
+    public void keepCoverageMetadata(boolean b)
+    {
+        configuration.keepCoverageMetadata(b);
+    }
 
 	public void keepConfigurationReport(boolean b)
 	{

@@ -21,7 +21,9 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.io.RandomAccessFile;
+import java.io.Writer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -330,7 +332,7 @@ public class Application implements Builder
      */
     private Configuration getDefaultConfiguration(boolean processDefaults)
     {
-        return OEMUtil.getApplicationConfiguration(constructCommandLine(null), false,
+        return OEMUtil.getApplicationConfiguration(constructCommandLine(null), false, true,
                                                    OEMUtil.getLogger(logger, messages), resolver,
                                                    mimeMappings, processDefaults);
     }
@@ -1155,6 +1157,7 @@ public class Application implements Builder
         {
             OEMConfiguration c;
             c = OEMUtil.getLinkerConfiguration(configuration.getLinkerOptions(), configuration.keepLinkReport(),
+                                               configuration.keepCoverageMetadata(),
                                                OEMUtil.getLogger(logger, messages), mimeMappings, resolver,
                                                data.configuration, configuration.newLinkerOptionsAfterCompile,
                                                data.includes, data.excludes);
@@ -1199,6 +1202,23 @@ public class Application implements Builder
                 if (hasChanged && temp != null)
                 {
                     data.movie = temp;
+                }
+                
+                if (getOutput() != null && configuration.keepCoverageMetadata())
+                {
+                    try
+                    {
+                        Report r = getReport();
+                        String outputName = getOutput().getAbsolutePath();
+                        outputName = outputName.substring(0, outputName.lastIndexOf('.')) + ".cvm";
+                        Writer w = new PrintWriter(new FileOutputStream(new File(outputName)));
+                        r.writeCoverageMetadata(w);
+                        w.close();
+                    }
+                    catch (IOException ex)
+                    {
+                        ThreadLocalToolkit.logError(ex.getMessage());
+                    }
                 }
             }
         }

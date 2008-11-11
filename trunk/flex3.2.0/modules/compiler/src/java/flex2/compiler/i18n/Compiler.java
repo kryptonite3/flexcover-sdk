@@ -52,6 +52,7 @@ public class Compiler implements flex2.compiler.Compiler
     	configuration = compilerConfig;
         asc = new flex2.compiler.as3.Compiler(new flex2.compiler.as3.Configuration()
         {
+            public boolean coverage() { return false; }
             public boolean debug() { return false; }
             public boolean profile() { return false; }
             public boolean strict() { return true; }

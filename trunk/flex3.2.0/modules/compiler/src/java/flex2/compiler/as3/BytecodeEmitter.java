@@ -14,8 +14,11 @@ package flex2.compiler.as3;
 import flex2.compiler.Source;
 import flex2.compiler.util.LineNumberMap;
 import macromedia.asc.embedding.avmplus.ActionBlockEmitter;
+import macromedia.asc.embedding.avmplus.RuntimeConstants;
+import macromedia.asc.semantics.ObjectValue;
 import macromedia.asc.util.ByteList;
 import macromedia.asc.util.Context;
+import macromedia.asc.util.Namespaces;
 import macromedia.asc.util.StringPrintWriter;
 
 import java.io.File;
@@ -29,15 +32,16 @@ public final class BytecodeEmitter extends ActionBlockEmitter
 {
 	public BytecodeEmitter(Context cx, Source source, boolean debug)
 	{
-		this(cx, source, debug, null);
+		this(cx, source, debug, false, null);
 	}
 
-	public BytecodeEmitter(Context cx, Source source, boolean debug, LineNumberMap map)
+	public BytecodeEmitter(Context cx, Source source, boolean debug, boolean coverage, LineNumberMap map)
 	{
 		super(cx, source != null ? source.getName() : null, new StringPrintWriter(), new StringPrintWriter(), false, false, false, debug);
 		this.map = map;
 		this.source = source;
 		this.cx = cx;
+        this.coverage = coverage; 
 
 		if (debug)
 		{
@@ -50,7 +54,7 @@ public final class BytecodeEmitter extends ActionBlockEmitter
 	private Source source;
 	private String currentFileName;
 	private Context cx;
-
+	
 	// C: not used when debug is false...
 	private Set lines;
 	private Line key;
@@ -73,13 +77,13 @@ public final class BytecodeEmitter extends ActionBlockEmitter
 		}
 	}
 
-	protected void DebugFile(String name)
+	protected String DebugFile(String name)
 	{
 		currentFileName = name;
 
 		if (!source.isDebuggable())
 		{
-			return;
+			return name;
 		}
 
 		if (map != null)
@@ -120,7 +124,7 @@ public final class BytecodeEmitter extends ActionBlockEmitter
 			}
 		}
 
-		super.DebugFile(name);
+		return super.DebugFile(name);
 	}
 
 	protected void DebugLine(ByteList code, int line)
@@ -148,6 +152,134 @@ public final class BytecodeEmitter extends ActionBlockEmitter
 			super.DebugLine(code, newLine);
 		}
 	}
+	
+    /* (non-Javadoc)
+     * @see macromedia.asc.embedding.avmplus.ActionBlockEmitter#RecordLineCoverage(java.lang.String, int, java.lang.String)
+     */
+    public boolean RecordLineCoverage(String functionName, int linenum, String debugFileName)
+    {
+        if (functionName == null
+            || functionName.length() == 0
+            || (!source.isDebuggable())
+            || (!coverage))
+        {
+            return false;
+        }
+
+        // Short circuit if the line is beyond the end of the file.
+        if (linenum > cx.input.lnNum)
+        {
+            return false;
+        }
+
+        int newLine = calculateLineNumber(linenum);
+        if (newLine == -1)
+        {
+            return false;
+        }
+        
+        String coverageKey = functionName + "@" + newLine;
+        instrumentCoverage(coverageKey, debugFileName);
+        return true;
+    }
+
+    /* (non-Javadoc)
+     * @see macromedia.asc.embedding.avmplus.ActionBlockEmitter#RecordBranchCoverage(java.lang.String, boolean, int, int)
+     */
+    public boolean RecordBranchCoverage(String functionName, boolean isBranch, int linenum, int colnum)
+    {
+        if (functionName == null
+            || functionName.length() == 0
+            || (!source.isDebuggable())
+            || (!coverage))
+        {
+            return false;
+        }
+
+        // Short circuit if the line is beyond the end of the file.
+        if (linenum > cx.input.lnNum)
+        {
+            return false;
+        }
+
+        int newLine = calculateLineNumber(linenum);
+        if (newLine == -1)
+        {
+            return false;
+        }
+        
+        // Guard against recursive coverage recording calls from instrumentation bytecode output
+        boolean saved_emit_debug_info = emit_debug_info;
+        emit_debug_info = false;
+        
+        String branchLocation = linenum + "." + colnum;
+        if (map != null)
+        {
+        	// If there is a map, then this indicates that actually we're in an MXML source file,
+        	// and the line number and column might be meaningless, so emit the MXML line number
+        	// followed by a "#" and the AS3 source's line and column.
+        	//
+            branchLocation = newLine + "#" + branchLocation;
+        }
+        
+        String coverageKey = functionName + '@'
+            + (isBranch ? '+' : '-') 
+            + branchLocation;
+
+        instrumentCoverage(coverageKey, null);
+        
+        emit_debug_info = saved_emit_debug_info;
+        
+        return true;
+    }
+
+    /**
+     * Emit an instrumentation call to the top-level coverage() function containing the coverage key and,
+     * optionally, the source file name.
+     * 
+     * @param coverageKey a coverage key describing some executable coverage element in the program
+     * @param debugFileName an optional name to be recorded along with the key as part of the coverage metadata,
+     * as an aid to finding the source later.  This name is not passed in the coverage() call.
+     */
+    private void instrumentCoverage(String coverageKey, String debugFileName)
+    {
+        final String COVERAGE = "coverage";
+        ObjectValue n = cx.publicNamespace();
+        Namespaces ns = cx.statics.internNamespaces.intern(n);
+        
+        boolean scopeStackEmpty = (cur_scope == 0); 
+        if (scopeStackEmpty)
+        {
+	        LoadThis();
+	        PushScope();   // Need to push scope to keep verifier happy if scope stack is empty
+        }
+        
+        FindProperty(COVERAGE, ns, true, true, false);
+        PushString(coverageKey);
+        CallProperty(COVERAGE, ns, 1, true, false, false, false);
+        Pop();
+        
+        if (scopeStackEmpty)
+        {
+        	PopScope();    // Pop the extra scope
+        }
+        
+        if (debugFileName != null)
+        {
+            String fileName;
+            int idx = debugFileName.indexOf(";;");
+            if (idx >= 0)
+            {
+                fileName = debugFileName.substring(0, idx) + File.separator + debugFileName.substring(idx+2);
+            }
+            else
+            {
+                fileName = debugFileName.replace(';', File.separatorChar);
+            }
+            coverageKey += ";" + fileName;
+        }
+        cx.statics.addCoverageKey(coverageKey);
+    }
 
 	private int calculateLineNumber(int line)
 	{

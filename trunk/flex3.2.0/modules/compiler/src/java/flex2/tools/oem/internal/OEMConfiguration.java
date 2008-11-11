@@ -82,6 +82,7 @@ public class OEMConfiguration implements Configuration, ConfigurationConstants
 		
 		keepLinkReport = false;
 		keepConfigurationReport = false;
+		keepCoverageMetadata = true;
 		
 		tokens = new TreeMap();
 	}
@@ -92,7 +93,7 @@ public class OEMConfiguration implements Configuration, ConfigurationConstants
 	private TreeMapAdapter args, defaults, more, linker_args, linker_more;
 	private String[] extras;
 	public final Set newLinkerOptionsAfterCompile;
-	private boolean keepLinkReport, keepConfigurationReport;
+	private boolean keepLinkReport, keepCoverageMetadata, keepConfigurationReport;
 	
 	private Map tokens;
 
@@ -536,6 +537,11 @@ public class OEMConfiguration implements Configuration, ConfigurationConstants
 		newLinkerOptionsAfterCompile.add(COMPILER_DEBUG);
 		newLinkerOptionsAfterCompile.add(DEBUG_PASSWORD);
 	}
+	
+	public void enableCoverage(boolean b)
+	{
+	    args.put(COMPILER_COVERAGE, b ? Boolean.TRUE : Boolean.FALSE);
+	}
 
 	/**
 	 * Sets the location of the default CSS file.
@@ -741,23 +747,34 @@ public class OEMConfiguration implements Configuration, ConfigurationConstants
 		args.put(COMPILER_KEEP_GENERATED_ACTIONSCRIPT, b ? Boolean.TRUE : Boolean.FALSE);
 	}
 
-	/**
-	 * Instructs the linker to keep a report of the content that is included in the application.
-	 * Callers may use <code>Report.writeLinkReport()</code> to retrieve the linker report.
-	 * 
-	 * @param b boolean value
-	 */
-	public void keepLinkReport(boolean b)
-	{
-		keepLinkReport = b;
-		newLinkerOptionsAfterCompile.add(LINK_REPORT);
-	}
-	
-	public boolean keepLinkReport()
-	{
-		return keepLinkReport;
-	}
-	
+    /**
+     * Instructs the linker to keep a report of the content that is included in the application.
+     * Callers may use <code>Report.writeLinkReport()</code> to retrieve the linker report.
+     * 
+     * @param b boolean value
+     */
+    public void keepLinkReport(boolean b)
+    {
+        keepLinkReport = b;
+        newLinkerOptionsAfterCompile.add(LINK_REPORT);
+    }
+    
+    public boolean keepLinkReport()
+    {
+        return keepLinkReport;
+    }
+    
+    public void keepCoverageMetadata(boolean b)
+    {
+        keepCoverageMetadata = b;
+        newLinkerOptionsAfterCompile.add(COVERAGE_METADATA);
+    }
+    
+    public boolean keepCoverageMetadata()
+    {
+        return keepCoverageMetadata;
+    }
+    
 	/**
 	 * Instructs the compiler to keep a report of the compiler configuration settings.
 	 * Callers may use <code>Report.writeConfigurationReport()</code> to retrieve the configuration report.
@@ -2191,6 +2208,7 @@ public class OEMConfiguration implements Configuration, ConfigurationConstants
 		useActionScript3(cc.dialect() == CompilerConfiguration.AS3Dialect);
 		setContextRoot(cc.getContextRoot());
 		enableDebugging(cc.debug(), configuration.debugPassword());
+		enableCoverage(cc.coverage());
 		
 		if (cc.getDefaultsCssUrl() != null)
 		{

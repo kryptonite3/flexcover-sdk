@@ -265,6 +265,18 @@ public class Compc extends Tool
                         new CompcPreLink(rbFiles, configuration.getIncludeResourceBundles()), 
                         configuration.getLicensesConfiguration().getLicenseMap(), sources);
 
+                // FLEXCOVER: write out coverage metadata
+                String swcStr = configuration.getOutput();
+
+                // default coverage metadata output to sibling file of output
+                if (configuration.getCompilerConfiguration().coverage()
+                    && !configuration.generateCoverageMetadata())
+                {
+                    int dotIndex = swcStr.lastIndexOf('.');
+                    String cvmName = (dotIndex >= 0) ? swcStr.substring(0, dotIndex) : swcStr;
+                    configuration.setCoverageMetadataFileName(cvmName + ".cvm");
+                }
+
                 // Link the swc and then export it.
                 flex2.compiler.swc.API.exportSwc(configuration, units, nsComponents, cache, rbFiles);
                                 

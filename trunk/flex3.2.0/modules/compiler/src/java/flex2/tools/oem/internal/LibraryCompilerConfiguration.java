@@ -39,6 +39,18 @@ public class LibraryCompilerConfiguration extends ToolsConfiguration
     	super.validate(cfgbuf);
     }
 
+    private boolean generateCoverageMetadata;
+    
+    public void keepCoverageMetadata(boolean b)
+    {
+        generateCoverageMetadata = b;
+    }
+    
+    public boolean generateCoverageMetadata()
+    {
+        return generateCoverageMetadata;
+    }
+    
     //
     // 'generate-link-report' option
     //

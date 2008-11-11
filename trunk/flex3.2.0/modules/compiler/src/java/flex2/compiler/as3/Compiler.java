@@ -251,7 +251,6 @@ public class Compiler implements flex2.compiler.Compiler
 
 			source.close();
 
-			cleanNodeFactory(cx.getNodeFactory());
 		}
 		else
 		{
@@ -282,8 +281,6 @@ public class Compiler implements flex2.compiler.Compiler
 					}
 				}
 				node = parser.parseProgram();
-
-				cleanNodeFactory(cx.getNodeFactory());
 			}
 			catch (IOException ex)
 			{
@@ -303,6 +300,33 @@ public class Compiler implements flex2.compiler.Compiler
 				}
 			}
 		}
+
+		// FLEXCOVER: synthesize a reference to the coverage() function in each compilation unit, to force
+		//     it to be referenced and linked into the final program.  The following verbiage is basically equivalent
+		//     to:
+		//			import coverage;
+		//			coverage;
+		//
+	    if (configuration.coverage())
+	    {
+	        NodeFactory nodeFactory = cx.getNodeFactory();
+	        IdentifierNode coverageId = nodeFactory.identifier("coverage");
+	        PackageIdentifiersNode coveragePkgId = nodeFactory.packageIdentifiers(null, coverageId, true);
+	        PackageNameNode coveragePkg = nodeFactory.packageName(coveragePkgId);
+	        ImportDirectiveNode coverageImport = nodeFactory.importDirective(null, coveragePkg, null, cx);
+	        node.statements.items.add(coverageImport);
+	        
+	        GetExpressionNode coverageGet = nodeFactory.getExpression(coverageId);
+	        MemberExpressionNode coverageMember = nodeFactory.memberExpression(null, coverageGet);
+	        ListNode coverageList = nodeFactory.list(null, coverageMember);
+	        ExpressionStatementNode coverageExpr = nodeFactory.expressionStatement(coverageList);
+	        node.statements.items.add(coverageExpr);
+	    }
+	    
+	    // FLEXCOVER: This was moved down here because the node factory needs to still be alive for the above
+	    //    synthetic-reference incantations to work.
+	    //
+        cleanNodeFactory(cx.getNodeFactory());
 
 		if (ThreadLocalToolkit.errorCount() > 0)
 		{
@@ -673,6 +697,7 @@ public class Compiler implements flex2.compiler.Compiler
 		LineNumberMap map = (LineNumberMap) context.getAttribute("LineNumberMap");
 		Emitter emitter = new BytecodeEmitter(cx, unit.getSource(),
 		                                      configuration != null && configuration.debug(),
+		                                      configuration != null && configuration.coverage(),
 		                                      (configuration != null && configuration.adjustOpDebugLine()) ? map : null);
 
 		cx.pushScope(node.frame);
@@ -700,6 +725,12 @@ public class Compiler implements flex2.compiler.Compiler
 				return;
 			}
 		}
+
+		// FLEXCOVER: Copy the generated coverage keys from the Context into the top-level CompilationUnit
+		// that caused this one to be generated.
+		CompilationUnit originalUnit = unit.getSource().getCanonicalSource().getCompilationUnit();
+        originalUnit.coverageKeys = cx.getCoverageKeys();
+        cx.clearCoverageKeys();
 
 		cleanSlots((ObjectValue) unit.typeInfo, cx, unit.topLevelDefinitions);
 		unit.getContext().removeAttribute("cx");

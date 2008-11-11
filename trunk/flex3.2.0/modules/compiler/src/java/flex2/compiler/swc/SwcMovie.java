@@ -15,6 +15,7 @@ import flex2.linker.SimpleMovie;
 import flex2.linker.LinkerException;
 import flex2.linker.CULinkable;
 import flex2.linker.DependencyWalker;
+import flex2.linker.CoverageMetadataWriter;
 import flex2.linker.Configuration;
 import flex2.linker.FlexMovie;
 import flex2.compiler.CompilationUnit;
@@ -55,6 +56,7 @@ public class SwcMovie extends SimpleMovie
 	    includes = new HashSet(configuration.getIncludes());
         unresolved = new HashSet(configuration.getUnresolved());
         generateLinkReport = configuration.generateLinkReport();
+        generateCoverageMetadata = configuration.generateCoverageMetadata();
         generateRBList = configuration.generateRBList();
 
 	    resourceBundles = new TreeSet(configuration.getResourceBundles());
@@ -96,6 +98,10 @@ public class SwcMovie extends SimpleMovie
             if (generateLinkReport)
             {
             	linkReport = DependencyWalker.dump( state );
+            }
+            if (generateCoverageMetadata)
+            {
+                coverageReport = CoverageMetadataWriter.dump( units );
             }
             if (generateRBList)
             {

@@ -134,7 +134,21 @@ public class ApplicationCompilerConfiguration extends ToolsConfiguration
 	}
 
     //
-	// 'generate-link-report' option
+    // 'generate-coverage-report' option
+    //
+    
+    private boolean generateCoverageMetadata;
+    
+    public boolean generateCoverageMetadata()
+    {
+        return generateCoverageMetadata;
+    }
+    
+    public void keepCoverageMetadata(boolean b)
+    {
+        generateCoverageMetadata = b;
+    }
+    
 	//
 	
 	private boolean generateLinkReport;

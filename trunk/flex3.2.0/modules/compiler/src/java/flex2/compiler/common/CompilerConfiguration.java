@@ -548,6 +548,34 @@ public class CompilerConfiguration implements flex2.compiler.as3.Configuration,
     }
 
     //
+    // 'compiler.coverage' option
+    //
+
+    private boolean coverage;
+
+    public boolean coverage()
+    {
+        return coverage;
+    }
+
+    public void cfgCoverage( ConfigurationValue cv, boolean coverage )
+    {
+        this.coverage = coverage;
+        this.generateDebugTags = this.generateDebugTags || coverage; 
+    }
+
+    public static ConfigurationInfo getCoverageInfo()
+    {
+        return new AdvancedConfigurationInfo()
+        {
+            public String[] getPrerequisites()
+            {
+                return new String[] { "debug" };
+            }
+        };
+    }
+
+    //
     // 'compiler.debug' option
     //
 

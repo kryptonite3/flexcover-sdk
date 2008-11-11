@@ -292,6 +292,20 @@ public final class Compiler extends Tool
                 }
                 else
                 {
+                    // output SWF
+                    String name = configuration.getOutput();
+                    if (name == null)
+                    {
+                        name = targetFile.getName();
+                    }
+
+                    // default coverage metadata output to sibling file of output
+                    if (configuration.getCompilerConfiguration().coverage()
+                        && !configuration.generateCoverageMetadata())
+                    {
+                        configuration.setCoverageMetadataFileName(name.substring(0, name.lastIndexOf('.')) + ".cvm");
+                    }
+
                     Movie movie = flex2.linker.API.link(units, 
                             new PostLink(configuration), configuration);
 

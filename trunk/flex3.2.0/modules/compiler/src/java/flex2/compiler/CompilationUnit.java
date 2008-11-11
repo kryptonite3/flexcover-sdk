@@ -160,6 +160,9 @@ public final class CompilationUnit
 
 	public Styles styles;
 
+	// Set of coverage keys collected during this unit's compilation
+	public Set coverageKeys;
+	
 	/**
 	 * only MXML components set StylesContainer
 	 */

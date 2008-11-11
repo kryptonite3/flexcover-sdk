@@ -23,5 +23,8 @@ public class DebugInfo
     String debug_file;
     boolean suppress_debug_method = false;
     boolean debug_file_dirty = false;
+    boolean debug_branch_file_dirty = false;    // FLEXCOVER
+    String debug_function;                      // FLEXCOVER
+    boolean debug_function_dirty = false;       // FLEXCOVER
 }
 

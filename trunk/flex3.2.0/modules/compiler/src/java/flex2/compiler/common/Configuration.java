@@ -391,6 +391,43 @@ public class Configuration implements flex2.linker.Configuration
     }
     
     //
+    // 'coverage-report' option
+    //
+    
+    private String coverageReportFileName = null;
+
+    public String getCoverageMetadataFileName()
+    {
+        return coverageReportFileName;
+    }
+    
+    public boolean generateCoverageMetadata()
+    {
+        return coverageReportFileName != null;
+    }
+
+    public void setCoverageMetadataFileName(String filename)
+    {
+        coverageReportFileName = filename;
+    }
+    
+    public void cfgCoverageMetadata( ConfigurationValue cv, String filename )
+    {
+        this.coverageReportFileName = getOutputPath(cv, filename);
+    }
+    
+    public static ConfigurationInfo getCoverageMetadataInfo()
+    {
+        return new ConfigurationInfo(new String[] {"filename"})
+        {
+            public boolean isAdvanced()
+            {
+                return true;
+            }
+        };
+    }
+
+    //
     // 'debug-password' option
     //
     
