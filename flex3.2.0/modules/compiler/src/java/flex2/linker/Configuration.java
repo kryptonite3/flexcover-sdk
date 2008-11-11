@@ -130,6 +130,12 @@ public interface Configuration
     boolean generateRBList();
 
     /**
+     * @return name of coverage report file, null if none
+     */
+    String getCoverageMetadataFileName();
+    boolean generateCoverageMetadata();
+
+    /**
      * @return set of resource bundles for resource bundle list
      */
     SortedSet getResourceBundles();

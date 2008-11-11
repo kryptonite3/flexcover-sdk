@@ -54,6 +54,10 @@ public class ContextStatics
 	public CompilerHandler handler = null;
 	String pathspec;
 	String scriptname;
+	
+	// FLEXCOVER: this list accumulates all coverage keys recorded by the instrumentation code, to be
+	//   emitted later in a .cvm file.
+	Set<String> coverageKeys = new LinkedHashSet<String>();
 
 	public static final int LANG_EN		= 0;
     public static final int LANG_CN		= 1;
@@ -394,5 +398,12 @@ public class ContextStatics
     	protected_namespaces.remove(name);
     	static_protected_namespaces.remove(name);
     	namespaces.remove(name);
+    }
+    
+    // FLEXCOVER: add a coverage key for later reporting
+    //
+    public void addCoverageKey(String key)
+    {
+        coverageKeys.add(key);
     }
 }

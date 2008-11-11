@@ -148,20 +148,26 @@ public class Emitter
 
 	protected void StartMethod()
 	{
-		StartMethod("", 0, 0, 0, false, 0);
+		StartMethod("", 0, 0, 0, false, 0, null);
 	}
 
 	protected void StartMethod(final String name, int param_count, int local_count)
 	{
-		StartMethod(name, param_count, local_count, 0, false, 0);
+		StartMethod(name, param_count, local_count, 0, false, 0, null);
 	}
 
-	protected void StartMethod(final String name, int param_count, int local_count, int temp_count, boolean needs_activation, int needs_arguments)
+    protected void StartMethod(final String name, int param_count, int local_count, int temp_count, boolean needs_activation, int needs_arguments)
+    {
+        StartMethod(name, param_count, local_count, 0, false, 0, null);
+    }
+    
+    // FLEXCOVER: additional debug_name argument propagates method debug name into BytecodeEmitter for instrumentation
+	protected void StartMethod(final String name, int param_count, int local_count, int temp_count, boolean needs_activation, int needs_arguments, final String debug_name)
 	{
 		doing_method = true;
 		if (impl != null)
 		{
-			impl.StartMethod(name, param_count, local_count, temp_count, needs_activation, needs_arguments);
+			impl.StartMethod(name, param_count, local_count, temp_count, needs_activation, needs_arguments, debug_name);
 		}
 	}
 
@@ -568,11 +574,19 @@ public class Emitter
 		}
 	}
 
-    protected void If(int kind)
+	protected void If(int kind)
+	{
+	    If(kind, false);
+	}
+	
+	// FLEXCOVER: when set, alwaysBranch hints to the branch instrumentation that this is a forced branch
+	// and should not be instrumented for both control flows.
+	//
+    protected void If(int kind, boolean alwaysBranch)
     {
         if (impl != null)
         {
-            impl.If(kind);
+            impl.If(kind, alwaysBranch);
         }
     }
 
@@ -719,12 +733,20 @@ public class Emitter
 			impl.LoopBegin();
 		}
 	}
+    
+    protected void LoopEnd(int kind)
+    {
+        LoopEnd(kind, false);
+    }
 
-	protected void LoopEnd(int kind)
+	// FLEXCOVER: when set, alwaysBranch hints to the branch instrumentation that this is a forced branch
+	// and should not be instrumented for both control flows.
+	//
+	protected void LoopEnd(int kind, boolean alwaysBranch)
 	{
 		if (impl != null)
 		{
-			impl.LoopEnd(kind);
+			impl.LoopEnd(kind, alwaysBranch);
 		}
 	}
 

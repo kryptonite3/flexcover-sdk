@@ -166,4 +166,8 @@
             <fileset dir="${basedir}/classes" />
 		</delete>
 	</target>
+
+        <target name="stage">
+                <copy file="${lib.dir}/asc.jar" tofile="${basedir}/../../../../lib/asc.jar"/>
+        </target>
 </project>

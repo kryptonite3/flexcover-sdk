@@ -30,6 +30,7 @@ interface ConfigurationConstants
     String METADATA_DATE                                        = "--metadata.date";
     String METADATA_CREATOR                                     = "--metadata.creator";
     String METADATA_CONTRIBUTOR                                 = "--metadata.contributor";
+    String COVERAGE_METADATA                                    = "--coverage-metadata";
     String LINK_REPORT                                          = "--link-report";
     String LICENSES_LICENSE                                     = "--licenses.license";
     String INCLUDES                                             = "--includes";
@@ -109,6 +110,7 @@ interface ConfigurationConstants
     String COMPILER_EXTERNAL_LIBRARY_PATH                       = "--compiler.external-library-path";
     String COMPILER_ES                                          = "--compiler.es";
     String COMPILER_DEFAULTS_CSS_URL                            = "--compiler.defaults-css-url";
+    String COMPILER_COVERAGE                                    = "--compiler.coverage";
     String COMPILER_DEBUG                                       = "--compiler.debug";
     String COMPILER_CONTEXT_ROOT                                = "--compiler.context-root";
     String COMPILER_AS3                                         = "--compiler.as3";

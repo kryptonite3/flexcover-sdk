@@ -851,10 +851,10 @@ public class ActionBlockEmitter extends Emitter
 
     protected void StartMethod()
     {
-        StartMethod("", 0, 0, 0, false, 0);
+        StartMethod("", 0, 0, 0, false, 0, null);
     }
 
-    protected void StartMethod(final String name, int param_count, int local_count, int temp_count, boolean needs_activation, int needs_arguments)
+    protected void StartMethod(final String name, int param_count, int local_count, int temp_count, boolean needs_activation, int needs_arguments, String debug_name)
     {
         if (show_instructions)
         {
@@ -885,9 +885,20 @@ public class ActionBlockEmitter extends Emitter
 
         // Reset debug line number for new method
         debug_info.debug_file_dirty = true;
+        
+        // FLEXCOVER: this dirty flag causes the next branch coverage instrumentation to emit the source filename
+        debug_info.debug_branch_file_dirty = true;
+        
         debug_info.debug_linenum_dirty = true;
         debug_info.suppress_debug_method = (name.indexOf("$iinit") != -1 ||
                                             name.indexOf("$cinit") != -1);
+        
+        // FLEXCOVER: stash the name to be used for recording coverage within this function and set a dirty flag to
+        //     indicate that a change occurred.
+        //
+        debug_info.debug_function = debug_name;
+        debug_info.debug_function_dirty = true;
+        
         sets_dxns = false;
     }
 
@@ -2323,10 +2334,11 @@ public class ActionBlockEmitter extends Emitter
     /*
      * DebugFile
      */
-    protected void DebugFile(String name)
+    protected String DebugFile(String name)
     {
         int index = ab.addUtf8Constant(bytecodeFactory.ConstantUtf8Info(name));
         DebugFile(ab.code, index);
+        return name;
     }
 
     /*
@@ -4008,7 +4020,7 @@ public class ActionBlockEmitter extends Emitter
      *
      */
 
-    protected void If(int kind)
+    protected void If(int kind, boolean alwaysBranch)
     {
 
         showLineNumber();
@@ -4127,6 +4139,12 @@ public class ActionBlockEmitter extends Emitter
         if (show_instructions)
         {
             code_out.write(" [" + cur_stack + "]");
+        }
+        
+        // FLEXCOVER: record branch coverage for If conditional 
+        if (!alwaysBranch)
+        {
+            RecordIfCoverage();
         }
     }
 
@@ -4874,7 +4892,7 @@ public class ActionBlockEmitter extends Emitter
      *
      */
 
-    protected void LoopEnd(int kind)
+    protected void LoopEnd(int kind, boolean alwaysBranch)
     {
 
         showLineNumber();
@@ -4985,6 +5003,12 @@ public class ActionBlockEmitter extends Emitter
             default:
                 //throw "invalid if kind";
                 break;
+        }
+
+        // FLEXCOVER: record branch coverage for LoopEnd conditional 
+        if (!alwaysBranch)
+        {
+            RecordLoopEndCoverage();
         }
 
         loopbegin_addrs.removeLast();
@@ -8264,6 +8288,7 @@ protected void Setsuper(ByteList code,int index)
         {
             debug_info.debug_file = origin;
             debug_info.debug_file_dirty = true;
+            debug_info.debug_branch_file_dirty = true;
         }
     }
 
@@ -8312,16 +8337,197 @@ protected void Setsuper(ByteList code,int index)
                 ab.code != null &&
                 !debug_info.suppress_debug_method)
             {
+                String debugFileName = null;
                 if (debug_info.debug_file_dirty)
                 {
-                    DebugFile(debug_info.debug_file);
+                	// FLEXCOVER: we pick up the debug filename for use below
+                    debugFileName = DebugFile(debug_info.debug_file);
                     debug_info.debug_file_dirty = false;
                 }
                 
                 DebugLine(debug_info.debug_linenum);
                 debug_info.debug_linenum_dirty = false;
+                
+                // FLEXCOVER:
+                //    For each line with debug information, try to record its coverage.
+                //    If this is in fact enabled, and this is the first debug line in a function,
+                //    then record a function branch point for the function entry.
+                //
+                boolean lineRecorded = 
+                    RecordLineCoverage(debug_info.debug_function, debug_info.debug_linenum, debugFileName);
+
+                if (lineRecorded && debug_info.debug_function_dirty)
+                {
+                    if (recordBranch(true))
+                    {
+                        debug_info.debug_function_dirty = false;
+                    }
+                }
             }
         }
+    }
+    
+    /**
+     * FLEXCOVER: record a conditional branch based on the current function name and source position.
+     * @param isBranch if true, records the conditional branch as taken (+); if false, records it as not taken (-).
+     */
+    protected boolean recordBranch(boolean isBranch)
+    {
+        String debugFileName = null;
+        if (debug_info.debug_branch_file_dirty)
+        {
+            debugFileName = debug_info.debug_file;
+            debug_info.debug_branch_file_dirty = false;
+        }
+        return RecordBranchCoverage(debug_info.debug_function, isBranch, lnNum, colPos);
+    }
+
+    /**
+     * FLEXCOVER:
+     * Record branch coverage at the end of a loop by inserting extra code to record both arms of the control flow,
+     * and patching the just-emitted conditional jump.  The net result is like this:
+     * <pre>
+     * L1:
+     *     [loop body]
+     *     [push conditional on stack]
+     *     IfXXX L2
+     *     [record - condition]
+     *     Jump L3
+     * L2:
+     * 	   [record + condition]
+     *     Jump L1
+     * L3:
+     * </pre>
+     */
+    protected void RecordLoopEndCoverage()
+    {
+        if (!branch_coverage)
+        {
+            return;
+        }
+        
+        showLineNumber();
+        if (show_instructions)
+        {
+            code_out.println();
+            code_out.print("RecordLoopEndCoverage");
+        }
+
+        // save the address of the just-emitted jump on the true condition that goes back to the loop start.
+        int true_addr = getIP() - 3;
+
+        // Record the false arm of the iteration condition as we are exiting the loop and stick in a jump
+        // over the recording of the true arm that we'll patch later.
+        recordBranch(false);
+        Jump(ab.code);
+        int false_addr = getIP() - 3;
+
+        // now patch the previous conditional jump to go to the recording of the true arm
+        int offset = getIP() - true_addr + 1 - 4;
+        ab.code.set(true_addr, (byte) offset);
+        ab.code.set(true_addr + 1, (byte) (offset >> 8));
+        ab.code.set(true_addr + 2, (byte) (offset >> 16));
+
+        // record the true arm of the branch, and jump back to the start of the loop.
+        recordBranch(true);
+        Jump(ab.code);
+        int loop_addr = getIP() - 3;
+        offset = loopbegin_addrs.back() + 3 - getIP();
+        ab.code.set(loop_addr, (byte) offset);
+        ab.code.set(loop_addr + 1, (byte) (offset >> 8));
+        ab.code.set(loop_addr + 2, (byte) (offset >> 16));
+        
+        // Finally, patch the jump at the end of the recording of the false arm to come here.
+        offset = getIP() - false_addr + 1 - 4;
+        ab.code.set(false_addr, (byte) offset);
+        ab.code.set(false_addr + 1, (byte) (offset >> 8));
+        ab.code.set(false_addr + 2, (byte) (offset >> 16));
+    }
+
+    /**
+     * FLEXCOVER:
+     * 
+     * Record branch coverage for an If() by inserting extra code to record both arms of the control flow,
+     * and patching the just-emitted conditional jump.  Also fiddles with the IP sitting on the stack so that
+     * the instrumented code gets patched for Else, etc.  The net result for an AS3 if() statement is:
+     * 
+     * <pre>
+     *     [conditional]
+     *     [push conditional on stack]
+     *     IfXXX L1
+     *     [record + condition]
+     *     Jump L2
+     * L1:
+     * 	   [record - condition]
+     *     Jump L3
+     * L2:
+     *     [if clause]
+     *     Jump L4
+     * L3:
+     *     [else clause, if any]
+     * L4:
+     * </pre>
+
+     */
+    protected void RecordIfCoverage()
+    {
+        if (!branch_coverage)
+        {
+            return;
+        }
+        
+        showLineNumber();
+        if (show_instructions)
+        {
+            code_out.println();
+            code_out.print("RecordIfCoverage");
+        }
+
+
+        // record the true arm of the branch and insert a jump over the recording of the false arm
+        // that we'll patch later.
+        recordBranch(true);
+        Jump(ab.code);
+        int true_addr = getIP() - 3;
+
+        // now patch the previous conditional jump to go to the recording of the false arm
+        int if_index = if_addrs.removeLast();
+
+        int offset = getIP() - if_index + 1 - 4;
+        ab.code.set(if_index, (byte) offset);
+        ab.code.set(if_index + 1, (byte) (offset >> 8));
+        ab.code.set(if_index + 2, (byte) (offset >> 16));
+
+        // record the false arm of the branch, and create a jump that will be patched by a subsequent target
+        // in place of the original conditional jump.
+        recordBranch(false);
+        Jump(ab.code);
+        if_addrs.add(getIP() - 3);
+        
+        // Finally, patch the jump at the end of the recording of the true arm to come here.
+        offset = getIP() - true_addr + 1 - 4;
+        ab.code.set(true_addr, (byte) offset);
+        ab.code.set(true_addr + 1, (byte) (offset >> 8));
+        ab.code.set(true_addr + 2, (byte) (offset >> 16));
+    }
+    
+    /**
+     * Record line coverage within some function in some file.
+     * @return true if coverage recording was enabled in this context.
+     */
+    public boolean RecordLineCoverage(String functionName, int linenum, String debugFileName)
+    {
+        return false;
+    }
+
+    /**
+     * Record branch coverage within some function in some file, for the branch sense indicated by
+     * isBranch.
+     * @return true if coverage recording was enabled in this context.
+     */
+    public boolean RecordBranchCoverage(String functionName, boolean isBranch, int linenum, int colnum)
+    {
+        return false;
     }
 
     public void reorderMainScript()
@@ -8440,6 +8646,12 @@ protected void Setsuper(ByteList code,int index)
     public boolean show_linenums;
     public boolean show_stacknames;
     public boolean emit_debug_info;
+    
+    // FLEXCOVER: flag enabling instrumentation of coverage
+    public boolean coverage;
+
+    // hack to temporarily prevent branch coverage
+    private boolean branch_coverage = true;
 
     private DebugInfo debug_info = new DebugInfo();
 

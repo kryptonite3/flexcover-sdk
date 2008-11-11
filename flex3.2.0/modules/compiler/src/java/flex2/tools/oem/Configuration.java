@@ -118,6 +118,12 @@ public interface Configuration
     void setContextRoot(String path);
 
     /**
+     * Enable coverage in the compiler.
+     * @param b
+     */
+    void enableCoverage(boolean b);
+    
+    /**
      * Enables debugging in the application.
      * This is equivalent to using the <code>compiler.debug</code> and <code>-debug-password=true|false</code> options
      * for the mxmlc or compc compilers.
@@ -305,6 +311,14 @@ public interface Configuration
      * @param b Boolean value.
      */
     void keepLinkReport(boolean b);
+    
+    /**
+     * Instructs the linker to keep a report of the coverage data that is included in the application.
+     * You can use the <code>Report.writeCoverageMetadata()</code> method to retrieve the linker report.
+     * 
+     * @param b Boolean value.
+     */
+    void keepCoverageMetadata(boolean b);
     
     /**
      * Instructs the compiler to keep a report of the compiler configuration settings.

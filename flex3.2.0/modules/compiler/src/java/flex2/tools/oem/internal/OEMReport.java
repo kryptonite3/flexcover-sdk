@@ -62,6 +62,7 @@ public class OEMReport implements Report
 		if (movie != null)
 		{
 			linkReport = movie.getLinkReport();
+			coverageMetadata = movie.getCoverageMetadata();
 			bgColor = movie.bgcolor.color;
 			pageTitle = movie.pageTitle;
 			
@@ -175,7 +176,7 @@ public class OEMReport implements Report
 	private String pageTitle;
 	private double widthPercent, heightPercent;
 	
-	private String linkReport, configurationReport;
+	private String linkReport, configurationReport, coverageMetadata;
 	private Message[] messages;
 	
 	private String[][] assetNames, definitionNames;
@@ -267,19 +268,33 @@ public class OEMReport implements Report
 		}
 	}
 	
-	public long writeLinkReport(Writer out) throws IOException
-	{
-		long size = 0;
-		
-		if (linkReport != null)
-		{
-			out.write(linkReport);
-			out.flush();
-			size = linkReport.length();
-		}
-		
-		return size;
-	}
+    public long writeLinkReport(Writer out) throws IOException
+    {
+        long size = 0;
+        
+        if (linkReport != null)
+        {
+            out.write(linkReport);
+            out.flush();
+            size = linkReport.length();
+        }
+        
+        return size;
+    }
+
+    public long writeCoverageMetadata(Writer out) throws IOException
+    {
+        long size = 0;
+        
+        if (coverageMetadata != null)
+        {
+            out.write(coverageMetadata);
+            out.flush();
+            size = coverageMetadata.length();
+        }
+        
+        return size;
+    }
 
 	public long writeConfigurationReport(Writer out) throws IOException
 	{

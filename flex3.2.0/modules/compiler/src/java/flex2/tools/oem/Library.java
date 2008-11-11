@@ -20,7 +20,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.io.RandomAccessFile;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1480,6 +1482,7 @@ public class Library implements Builder
         if (hasChanged)
         {
             c = OEMUtil.getLinkerConfiguration(configuration.getLinkerOptions(), configuration.keepLinkReport(),
+                                               configuration.keepCoverageMetadata(),
                                                OEMUtil.getLogger(logger, messages), mimeMappings, resolver,
                                                data.configuration, configuration.newLinkerOptionsAfterCompile,
                                                data.includes, data.excludes);
@@ -1543,6 +1546,23 @@ public class Library implements Builder
                 ByteArrayInputStream in = new ByteArrayInputStream(baos.toByteArray());
                 FileUtil.streamOutput(in, out);
                 size = baos.size();
+            }
+
+            if (getOutput() != null && configuration.keepCoverageMetadata())
+            {
+                try
+                {
+                    Report r = getReport();
+                    String outputName = getOutput().getAbsolutePath();
+                    outputName = outputName.substring(0, outputName.lastIndexOf('.')) + ".cvm";
+                    Writer w = new PrintWriter(new FileOutputStream(new File(outputName)));
+                    r.writeCoverageMetadata(w);
+                    w.close();
+                }
+                catch (IOException ex)
+                {
+                    ThreadLocalToolkit.logError(ex.getMessage());
+                }
             }
 
             if (hasChanged && temp != null)
