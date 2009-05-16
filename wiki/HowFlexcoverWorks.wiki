@@ -1,0 +1,7 @@
+#summary How the Flexcover SDK works
+
+The Flexcover SDK works by injecting calls to a global top-level function named `coverage()` into the emitted bytecode in a SWF.  This function takes a single argument that encodes a location in the program.  At runtime, the expectation is that `coverage()` will log this information to some destination capable of analyzing it.  Analysis is the job of the flexcover project; all the Flexcover SDK does is to ensure that this information actually gets passed to these function calls.
+
+Thus, the resulting program must be linked with a SWC that defines a function declared as `function coverage(key:String)`.
+
+The `coverage()` function itself is external to this project and is defined as part of the flexcover codebase.
